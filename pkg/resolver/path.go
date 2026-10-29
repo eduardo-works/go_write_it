@@ -25,7 +25,7 @@ func ResolveFile(path string) (string, error) {
 		return path, nil
 	}
 
-	return "", fmt.Errorf("%s: %w", path, ErrNotFile)
+	return "", fmt.Errorf("%s: %w", path, project.ErrNotFile)
 }
 
 func ResolveDir(path string) (string, error) {
@@ -43,7 +43,7 @@ func ResolveDir(path string) (string, error) {
 		return path, nil
 	}
 
-	return "", fmt.Errorf("%s: %w", path, ErrNotDir)
+	return "", fmt.Errorf("%s: %w", path, project.ErrNotDir)
 }
 
 func ResolvePath(path string) (string, error) {
@@ -86,42 +86,4 @@ func ExpandPath(path string) (string, error) {
 	}
 
 	return filepath.Abs(path)
-}
-
-func ResolveRootFolder(path string) (string, error) {
-	resolved, err := ResolvePath(path)
-	if err != nil {
-		return "", err
-	}
-
-	info, err := os.Stat(resolved)
-	if err != nil {
-		return "", err
-	}
-
-	if !info.IsDir() {
-		resolved = filepath.Dir(resolved)
-	}
-
-	for range 2 {
-		candidate := filepath.Join(resolved, project.ProjectFile)
-
-		_, err := ResolveFile(candidate)
-		if err == nil {
-			return resolved, nil
-		}
-
-		if !errors.Is(err, os.ErrNotExist) {
-			return "", err
-		}
-
-		parent := filepath.Dir(resolved)
-		if parent == resolved {
-			break
-		}
-
-		resolved = parent
-	}
-
-	return "", fmt.Errorf("path is not a project root: %s: %w", path, ErrNotProjectRoot)
 }

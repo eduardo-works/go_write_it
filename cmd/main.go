@@ -29,6 +29,7 @@ func init() {
 
 func main() {
 	configureProject()
+	configureFiles()
 	if err := rootCmd.Execute(); err != nil {
 		if debug {
 			terminal.Error(fmt.Sprintf("%+v", err))

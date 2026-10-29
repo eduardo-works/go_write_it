@@ -109,7 +109,7 @@ func TestResolveFile(t *testing.T) {
 
 	t.Run("directory is not a file", func(t *testing.T) {
 		_, err := ResolveFile(dir)
-		if !errors.Is(err, ErrNotFile) {
+		if !errors.Is(err, project.ErrNotFile) {
 			t.Fatalf("expected ErrNotFile, got %v", err)
 		}
 	})
@@ -143,59 +143,8 @@ func TestResolveDir(t *testing.T) {
 
 	t.Run("file is not a directory", func(t *testing.T) {
 		_, err := ResolveDir(file)
-		if !errors.Is(err, ErrNotDir) {
+		if !errors.Is(err, project.ErrNotDir) {
 			t.Fatalf("expected ErrNotDir, got %v", err)
-		}
-	})
-}
-
-func TestResolveRootFolder(t *testing.T) {
-	root := t.TempDir()
-	child := filepath.Join(root, "parte_01")
-	file := filepath.Join(child, "chapter.md")
-	marker := filepath.Join(root, project.ProjectFile)
-
-	if err := os.Mkdir(child, 0700); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(file, []byte("Chapter"), 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.WriteFile(marker, []byte("{}"), 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	tests := []struct {
-		name string
-		path string
-		want string
-	}{
-		{"project root", root, root},
-		{"child directory", child, root},
-		{"file inside child directory", file, root},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ResolveRootFolder(tt.path)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if got != tt.want {
-				t.Fatalf("expected %q, got %q", tt.want, got)
-			}
-		})
-	}
-
-	t.Run("not inside a project", func(t *testing.T) {
-		dir := t.TempDir()
-
-		_, err := ResolveRootFolder(dir)
-		if !errors.Is(err, ErrNotProjectRoot) {
-			t.Fatalf("expected ErrNotProjectRoot, got %v", err)
 		}
 	})
 }
