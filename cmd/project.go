@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/eduardo-works/writeit/cmd/project/create"
 	"github.com/eduardo-works/writeit/pkg/resolver"
+	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/eduardo-works/writeit/pkg/validator"
 	"github.com/spf13/cobra"
 )
@@ -82,23 +84,19 @@ var projectCreateCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Project path:", rootFolder)
-		fmt.Println("Project title:", title)
-		fmt.Println("Project type:", projectType)
-
-		if parts > 0 {
-			fmt.Println("Parts:", parts)
+		p, err := create.ProjectCreate(rootFolder, create.Options{
+			Title:       title,
+			Author:      author,
+			Email:       email,
+			Phone:       phone,
+			ProjectType: projectType,
+			Parts:       parts,
+		})
+		if err != nil {
+			return err
 		}
 
-		fmt.Println("Author:", author)
-
-		if email != "" {
-			fmt.Println("Email:", email)
-		}
-
-		if phone != "" {
-			fmt.Println("Phone:", phone)
-		}
+		terminal.Info(fmt.Sprintf("Project created: %s", p.RootFolder))
 
 		return nil
 	},

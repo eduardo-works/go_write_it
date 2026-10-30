@@ -44,6 +44,19 @@ func Slugify(text string) string {
 	return slug.Make(text)
 }
 
+func PortugueseNumbersToWords(n int) string {
+	words := []string{
+		"zero", "um", "dois", "três", "quatro",
+		"cinco", "seis", "sete", "oito", "nove", "dez",
+	}
+
+	if n < 0 || n >= len(words) {
+		return ""
+	}
+
+	return words[n]
+}
+
 func removePunctuationMarks(text string) string {
 	text = strings.TrimSpace(text)
 

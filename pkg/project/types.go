@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"strings"
+	"time"
 )
 
 type ProjectType string
@@ -38,16 +41,20 @@ type Project struct {
 	Files       map[string]string `json:"files"`
 }
 
-func (p Project) IsStandalone() bool {
-	return IsProjectType(p.ProjectType, Standalone)
-}
-
 func (p Project) IsChaptered() bool {
 	return IsProjectType(p.ProjectType, Chaptered)
 }
 
 func (p Project) IsParted() bool {
 	return IsProjectType(p.ProjectType, Parted)
+}
+
+func (p Project) IsStandalone() bool {
+	return IsProjectType(p.ProjectType, Standalone)
+}
+
+func (p Project) IsEmpty() bool {
+	return p.RootFolder == ""
 }
 
 func (p Project) Save() error {
@@ -81,6 +88,76 @@ func (p Project) Contain(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+func (p *Project) AddFolder(folder string) (string, error) {
+	relativePath, err := filepath.Rel(p.RootFolder, folder)
+	if err != nil {
+		return "", err
+	}
+
+	if relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("folder is outside the project root: %s", folder)
+	}
+
+	if slices.Contains(p.Folders, relativePath) {
+		return "", fmt.Errorf("folder already exists: %s", relativePath)
+	}
+
+	p.Folders = append(p.Folders, relativePath)
+	slices.Sort(p.Folders)
+
+	if err := p.Save(); err != nil {
+		return "", err
+	}
+
+	return relativePath, nil
+}
+
+func (p *Project) AddFile(file string) (string, error) {
+	relativePath, err := filepath.Rel(p.RootFolder, file)
+	if err != nil {
+		return "", err
+	}
+
+	if filepath.Ext(file) != ".md" {
+		return "", nil
+	}
+
+	parts := strings.Split(relativePath, string(filepath.Separator))
+	if len(parts) < 2 {
+		return "", nil
+	}
+
+	folder := parts[0]
+
+	validFolder := folder == ContextStandalone ||
+		folder == ContextChaptered ||
+		regexp.MustCompile(`^parte_[0-9]+$`).MatchString(folder)
+
+	if !validFolder {
+		return "", nil
+	}
+
+	if regexp.MustCompile(`_parte-[0-9]+\.md$`).MatchString(filepath.Base(file)) {
+		return "", nil
+	}
+
+	if p.Files == nil {
+		p.Files = make(map[string]string)
+	}
+
+	if _, exists := p.Files[relativePath]; exists {
+		return relativePath, nil
+	}
+
+	p.Files[relativePath] = time.Now().Format("2006-01-02")
+
+	if err := p.Save(); err != nil {
+		return "", err
+	}
+
+	return file, nil
 }
 
 func IsValid(value any) bool {
