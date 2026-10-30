@@ -27,7 +27,7 @@ func init() {
 }
 
 var fileCreateCmd = &cobra.Command{
-	Use:     "create <contextFolder> <title>",
+	Use:     "create <rootFolder> <title>",
 	Short:   "Create a new project file.",
 	Example: `writeit file create ./my-book/part_01 "This Is a Nice Chapter"`,
 	Args:    cobra.ExactArgs(2),
