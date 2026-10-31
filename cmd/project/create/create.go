@@ -32,7 +32,11 @@ func ProjectCreate(rootFolder string, o Options) (project.Project, error) {
 
 	createContextChapteredFolder(&p)
 	createContextStandaloneFolder(&p)
-	createContextPartedFolder(&p)
+	err = cmdproject.CreateAllContextPartFolders(&p)
+	if err != nil {
+		terminal.Warning(err.Error())
+		return p, err
+	}
 
 	return p, nil
 }
@@ -109,35 +113,6 @@ func createContextStandaloneFolder(p *project.Project) {
 	addStandaloneManuscriptFile(p, contextFolder)
 }
 
-func createContextPartedFolder(p *project.Project) {
-	if !p.IsParted() {
-		return
-	}
-
-	for part := 1; part <= p.Parts; part++ {
-		contextFolder, err := resolver.ResolveContext(*p, fmt.Sprint(part))
-		if err != nil {
-			terminal.Warning(fmt.Sprintf(
-				"Failed to resolve the context folder for part %d: %v",
-				part,
-				err,
-			))
-			continue
-		}
-
-		if _, err := cmdproject.MakeDir(p, contextFolder); err != nil {
-			terminal.Warning(fmt.Sprintf(
-				"Failed to create the context folder for part %d: %v",
-				part,
-				err,
-			))
-			continue
-		}
-
-		addPartFile(p, contextFolder, part)
-	}
-}
-
 func createMetaFolder(p *project.Project, folderName string) {
 	folder, err := cmdproject.MakeDir(p, p.RootFolder, folderName)
 	if err != nil {
@@ -167,32 +142,6 @@ func addStandaloneManuscriptFile(p *project.Project, contextFolder string) strin
 	if err != nil {
 		terminal.Warning(fmt.Sprintf(
 			"Failed to create standalone manuscript: %v",
-			err,
-		))
-		return ""
-	}
-
-	return path
-}
-
-func addPartFile(p *project.Project, contextFolder string, part int) string {
-	title := fmt.Sprintf("Parte %s", naming.PortugueseNumbersToWords(part))
-
-	content := template.Content(template.PartedTemplate, map[string]string{
-		"title": title,
-	})
-
-	path, err := cmdproject.WriteFile(
-		p,
-		content,
-		contextFolder,
-		naming.PartedPart(part),
-	)
-
-	if err != nil {
-		terminal.Warning(fmt.Sprintf(
-			"Failed to create manuscript for part %d: %v",
-			part,
 			err,
 		))
 		return ""

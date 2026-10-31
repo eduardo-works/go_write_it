@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/eduardo-works/writeit/cmd/project/addpart"
 	"github.com/eduardo-works/writeit/cmd/project/create"
 	"github.com/eduardo-works/writeit/cmd/project/rename"
 	"github.com/eduardo-works/writeit/cmd/project/update"
@@ -187,7 +188,12 @@ var projectAddPartCmd = &cobra.Command{
 			return fmt.Errorf("rootFolder: %w", err)
 		}
 
-		fmt.Println("Project path:", p.RootFolder)
+		p, err = addpart.ProjectAddPart(p)
+		if err != nil {
+			return fmt.Errorf("Add project part: %w", err)
+		}
+
+		terminal.Info(fmt.Sprintf("Part added to project: %s", p.RootFolder))
 
 		return nil
 	},
