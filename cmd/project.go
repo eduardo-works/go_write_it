@@ -5,6 +5,7 @@ import (
 
 	"github.com/eduardo-works/writeit/cmd/project/addpart"
 	"github.com/eduardo-works/writeit/cmd/project/create"
+	"github.com/eduardo-works/writeit/cmd/project/info"
 	"github.com/eduardo-works/writeit/cmd/project/rename"
 	"github.com/eduardo-works/writeit/cmd/project/update"
 	"github.com/eduardo-works/writeit/pkg/resolver"
@@ -227,7 +228,7 @@ var projectInfoCmd = &cobra.Command{
 			return fmt.Errorf("rootFolder: %w", err)
 		}
 
-		fmt.Println("Project path:", p.RootFolder)
+		info.ProjectInfo(p)
 
 		return nil
 	},
