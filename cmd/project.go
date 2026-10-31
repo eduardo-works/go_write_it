@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/eduardo-works/writeit/cmd/project/create"
+	"github.com/eduardo-works/writeit/cmd/project/rename"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -118,8 +119,12 @@ var projectRenameCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Project path:", p.RootFolder)
-		fmt.Println("New title:", title)
+		p, err = rename.ProjectRename(p, title)
+		if err != nil {
+			return err
+		}
+
+		terminal.Info(fmt.Sprintf("Project renamed: %s", p.RootFolder))
 
 		return nil
 	},
