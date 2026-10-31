@@ -114,17 +114,6 @@ func createContextPartedFolder(p *project.Project) {
 		return
 	}
 
-	contextRoot, err := resolver.ResolveContext(*p)
-	if err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to resolve the context folder: %v", err))
-		return
-	}
-
-	if _, err := cmdproject.MakeDir(p, contextRoot); err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to create the context folder: %v", err))
-		return
-	}
-
 	for part := 1; part <= p.Parts; part++ {
 		contextFolder, err := resolver.ResolveContext(*p, fmt.Sprint(part))
 		if err != nil {

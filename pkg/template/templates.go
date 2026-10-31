@@ -1,6 +1,9 @@
 package template
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 const StandaloneTemplate = "# «title»"
 
@@ -26,5 +29,5 @@ func Content(template string, options map[string]string) string {
 		content = strings.ReplaceAll(content, "«"+option+"»", value)
 	}
 
-	return content
+	return strings.TrimFunc(content, unicode.IsSpace) + "\n\n"
 }

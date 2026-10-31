@@ -17,7 +17,7 @@ const (
 	Standalone        ProjectType = "standalone"
 	Chaptered         ProjectType = "chaptered"
 	Parted            ProjectType = "parted"
-	ProjectFile       string      = ".writit_project"
+	ProjectFile       string      = ".writeit_project"
 	MetaPrompts       string      = "prompts"
 	MetaMeta          string      = "meta"
 	ContextStandalone string      = "texto"

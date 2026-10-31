@@ -53,7 +53,7 @@ var projectCreateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		rootFolder, err := validator.ValidateRootFolderCandidate(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		title, err := handlePositionalTitle(args, 1)
@@ -65,9 +65,10 @@ var projectCreateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
 		author, err = validator.ValidateNotEmpty(author)
 		if err != nil {
-			return err
+			return fmt.Errorf("author: %w", err)
 		}
 
 		email, err := handleEmail(cmd)
@@ -94,7 +95,7 @@ var projectCreateCmd = &cobra.Command{
 			Parts:       parts,
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("creating project: %w", err)
 		}
 
 		terminal.Info(fmt.Sprintf("Project created: %s", p.RootFolder))
@@ -111,7 +112,7 @@ var projectRenameCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		title, err := handlePositionalTitle(args, 1)
@@ -121,7 +122,7 @@ var projectRenameCmd = &cobra.Command{
 
 		p, err = rename.ProjectRename(p, title)
 		if err != nil {
-			return err
+			return fmt.Errorf("renaming project: %w", err)
 		}
 
 		terminal.Info(fmt.Sprintf("Project renamed: %s", p.RootFolder))
@@ -141,7 +142,7 @@ var projectUpdateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		author, err := handleAuthor(cmd)
@@ -185,7 +186,7 @@ var projectAddPartCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		fmt.Println("Project path:", p.RootFolder)
@@ -202,7 +203,7 @@ var projectNormalizeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		fmt.Println("Project path:", p.RootFolder)
@@ -219,7 +220,7 @@ var projectInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("rootFolder: %w", err)
 		}
 
 		fmt.Println("Project path:", p.RootFolder)

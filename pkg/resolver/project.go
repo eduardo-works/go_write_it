@@ -64,11 +64,11 @@ func ResolveProject(path string) (project.Project, error) {
 
 func ResolveContext(p project.Project, parts ...string) (string, error) {
 	if p.IsStandalone() {
-		return filepath.Join(p.RootFolder, string(project.Standalone)), nil
+		return filepath.Join(p.RootFolder, string(project.ContextStandalone)), nil
 	}
 
 	if p.IsChaptered() {
-		return filepath.Join(p.RootFolder, string(project.Chaptered)), nil
+		return filepath.Join(p.RootFolder, string(project.ContextChaptered)), nil
 	}
 
 	if !p.IsParted() {

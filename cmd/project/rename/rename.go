@@ -11,7 +11,7 @@ import (
 	"github.com/eduardo-works/writeit/pkg/validator"
 )
 
-const projectFile = ".writit_project"
+const projectFile = ".writeit_project"
 
 func ProjectRename(p project.Project, title string) (project.Project, error) {
 
