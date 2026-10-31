@@ -5,6 +5,7 @@ import (
 
 	"github.com/eduardo-works/writeit/cmd/project/create"
 	"github.com/eduardo-works/writeit/cmd/project/rename"
+	"github.com/eduardo-works/writeit/cmd/project/update"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -160,19 +161,16 @@ var projectUpdateCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Project path:", p.RootFolder)
-
-		if author != "" {
-			fmt.Println("Author:", author)
+		p, err = update.ProjectUpdate(p, update.Options{
+			Author: author,
+			Email:  email,
+			Phone:  phone,
+		})
+		if err != nil {
+			return fmt.Errorf("Updating project: %w", err)
 		}
 
-		if email != "" {
-			fmt.Println("Email:", email)
-		}
-
-		if phone != "" {
-			fmt.Println("Phone:", phone)
-		}
+		terminal.Info(fmt.Sprintf("Project updated: %s", p.RootFolder))
 
 		return nil
 	},
