@@ -151,12 +151,12 @@ func TestResolveContext(t *testing.T) {
 		{
 			name:        "standalone",
 			projectType: project.Standalone,
-			want:        filepath.Join(root, "standalone"),
+			want:        filepath.Join(root, project.ContextStandalone),
 		},
 		{
 			name:        "chaptered",
 			projectType: project.Chaptered,
-			want:        filepath.Join(root, "chaptered"),
+			want:        filepath.Join(root, project.ContextChaptered),
 		},
 		{
 			name:        "parted without part",
