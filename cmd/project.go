@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/eduardo-works/writeit/cmd/project/addpart"
 	"github.com/eduardo-works/writeit/cmd/project/create"
 	"github.com/eduardo-works/writeit/cmd/project/info"
 	"github.com/eduardo-works/writeit/cmd/project/rename"
 	"github.com/eduardo-works/writeit/cmd/project/update"
+	"github.com/eduardo-works/writeit/pkg/normalizer"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -26,6 +29,7 @@ func configureProject() {
 		projectUpdateCmd,
 		projectAddPartCmd,
 		projectNormalizeCmd,
+		projectDryRunCmd,
 		projectInfoCmd,
 	)
 
@@ -169,7 +173,7 @@ var projectUpdateCmd = &cobra.Command{
 			Phone:  phone,
 		})
 		if err != nil {
-			return fmt.Errorf("Updating project: %w", err)
+			return fmt.Errorf("updating project: %w", err)
 		}
 
 		terminal.Info(fmt.Sprintf("Project updated: %s", p.RootFolder))
@@ -191,7 +195,7 @@ var projectAddPartCmd = &cobra.Command{
 
 		p, err = addpart.ProjectAddPart(p)
 		if err != nil {
-			return fmt.Errorf("Add project part: %w", err)
+			return fmt.Errorf("adding project part: %w", err)
 		}
 
 		terminal.Info(fmt.Sprintf("Part added to project: %s", p.RootFolder))
@@ -211,10 +215,77 @@ var projectNormalizeCmd = &cobra.Command{
 			return fmt.Errorf("rootFolder: %w", err)
 		}
 
-		fmt.Println("Project path:", p.RootFolder)
+		issues, count, err := normalizer.Normalize(&p)
+
+		if count > 0 {
+			terminal.Info(fmt.Sprintf("%d files normalized", count))
+		} else if err == nil {
+			terminal.Info("No files were normalized")
+		}
+
+		printNormalizationIssues(issues)
+
+		if err != nil {
+			return fmt.Errorf("normalizing project: %w", err)
+		}
 
 		return nil
 	},
+}
+
+var projectDryRunCmd = &cobra.Command{
+	Use:     "dry-run <rootFolder>",
+	Short:   "List the project files that would be normalized.",
+	Example: `writeit project dry-run ./my-book`,
+	Args:    cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		p, err := resolver.ResolveProject(args[0])
+		if err != nil {
+			return fmt.Errorf("rootFolder: %w", err)
+		}
+
+		files, issues, count, err := normalizer.DryRun(&p)
+
+		if count > 0 {
+			terminal.Info(fmt.Sprintf("%d files would be normalized", count))
+		} else if err == nil {
+			terminal.Info("No files need to be normalized")
+		}
+
+		if len(files) > 0 {
+			terminal.WriteLine("{BrightCyan}{Bold}Files to be normalized")
+			terminal.WriteLine("{BrightCyan}----------------------------------------")
+			terminal.WriteLine("")
+
+			for _, file := range slices.Sorted(maps.Keys(files)) {
+				terminal.WriteLine(fmt.Sprintf("   %s: %s", files[file], file))
+			}
+		}
+
+		printNormalizationIssues(issues)
+
+		if err != nil {
+			return fmt.Errorf("project dry run: %w", err)
+		}
+
+		return nil
+	},
+}
+
+func printNormalizationIssues(issues []string) {
+	if len(issues) == 0 {
+		return
+	}
+
+	slices.Sort(issues)
+
+	terminal.WriteLine("{BrightCyan}{Bold}Normalization issues")
+	terminal.WriteLine("{BrightCyan}----------------------------------------")
+	terminal.WriteLine("")
+
+	for index, issue := range issues {
+		terminal.WriteLine(fmt.Sprintf("   #%04d: %s", index+1, issue))
+	}
 }
 
 var projectInfoCmd = &cobra.Command{

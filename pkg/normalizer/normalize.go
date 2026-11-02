@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 
 	"github.com/eduardo-works/writeit/pkg/finder"
@@ -12,33 +13,35 @@ import (
 	"github.com/eduardo-works/writeit/pkg/resolver"
 )
 
-func Normalize(p *project.Project) ([]string, error) {
+func Normalize(p *project.Project) ([]string, int, error) {
 	normalized := make(map[string]string)
 	tnFiles := []normalizerpath.NormalizedPath{}
 	issues := []string{}
 
 	if err := fillToNormalize(p, &tnFiles); err != nil {
-		return issues, err
+		return issues, 0, err
 	}
 
-	normalizeFiles(tnFiles, normalized, &issues)
+	count := normalizeFiles(tnFiles, normalized, &issues)
 
 	p.Files = normalized
 
 	if err := p.Save(); err != nil {
-		return issues, err
+		return issues, count, err
 	}
 
-	return issues, nil
+	slices.Sort(issues)
+	return issues, count, nil
 }
 
-func DryRun(p *project.Project) (map[string]string, []string, error) {
+func DryRun(p *project.Project) (map[string]string, []string, int, error) {
 	normalized := make(map[string]string)
 	tnFiles := []normalizerpath.NormalizedPath{}
 	issues := []string{}
+	count := 0
 
 	if err := fillToNormalize(p, &tnFiles); err != nil {
-		return normalized, issues, err
+		return normalized, issues, 0, err
 	}
 
 	for _, item := range tnFiles {
@@ -51,20 +54,20 @@ func DryRun(p *project.Project) (map[string]string, []string, error) {
 		}
 
 		if item.IsChanged() {
+			count = count + 1
 			normalized[item.TargetRel] = item.Date
-		} else {
-			normalized[item.SourceRel] = item.Date
 		}
 	}
-
-	return normalized, issues, nil
+	slices.Sort(issues)
+	return normalized, issues, count, nil
 }
 
 func normalizeFiles(
 	tnFiles []normalizerpath.NormalizedPath,
 	normalized map[string]string,
 	issues *[]string,
-) {
+) int {
+	count := 0
 	for _, item := range tnFiles {
 		prepareItem(&item)
 
@@ -79,8 +82,10 @@ func normalizeFiles(
 			continue
 		}
 
+		count = count + 1
 		rename(item, normalized, issues)
 	}
+	return count
 }
 
 func prepareItem(item *normalizerpath.NormalizedPath) {
