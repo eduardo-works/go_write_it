@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/eduardo-works/writeit/pkg/project"
-	"github.com/eduardo-works/writeit/pkg/resolver"
 )
 
 func FileParse(p project.Project, path string) (ParsedFiled, error) {
@@ -148,8 +147,15 @@ func ensureContext(p project.Project, parsed ParsedFiled) (ParsedFiled, error) {
 		return parsed, nil
 	}
 
-	context, err := resolver.ResolveContext(p, strconv.Itoa(parsed.Part))
-	if err != nil {
+	context := resolveStandalone(p)
+	if context == "" {
+		context = resolveChaptered(p)
+	}
+	if context == "" {
+		context = resolveParted(p, parsed.Part)
+	}
+
+	if context == "" {
 		return ParsedFiled{}, fmt.Errorf(
 			"impossible to determine the context (%s): %w",
 			parsed.Original,
@@ -206,4 +212,30 @@ func ensureIndex(p project.Project, parsed ParsedFiled) (ParsedFiled, error) {
 	}
 
 	return parsed, nil
+}
+
+func resolveStandalone(p project.Project) string {
+	if !p.IsStandalone() {
+		return ""
+	}
+
+	return filepath.Join(p.RootFolder, string(project.ContextStandalone))
+}
+
+func resolveChaptered(p project.Project) string {
+	if !p.IsChaptered() {
+		return ""
+	}
+
+	return filepath.Join(p.RootFolder, string(project.ContextChaptered))
+}
+
+func resolveParted(p project.Project, part int) string {
+	if !p.IsParted() {
+		return ""
+	}
+
+	partName := fmt.Sprintf("%s%02d", project.ContextParted, part)
+
+	return filepath.Join(p.RootFolder, partName)
 }

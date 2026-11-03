@@ -46,6 +46,28 @@ func ResolveDir(path string) (string, error) {
 	return "", fmt.Errorf("%s: %w", path, project.ErrNotDir)
 }
 
+func ResolveContainer(path string) (string, error) {
+	path, err := ResolvePath(path)
+	if err != nil {
+		return "", err
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+
+	if info.IsDir() {
+		return path, nil
+	}
+
+	if info.Mode().IsRegular() {
+		return filepath.Dir(path), nil
+	}
+
+	return "", fmt.Errorf("%s: %w", path, project.ErrNotDir)
+}
+
 func ResolvePath(path string) (string, error) {
 	path, err := ExpandPath(path)
 	if err != nil {
