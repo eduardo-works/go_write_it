@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/eduardo-works/writeit/pkg/naming"
 	"github.com/eduardo-works/writeit/pkg/parser"
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -36,12 +37,16 @@ func NormalizeChaptered(p *project.Project, path string) NormalizedPath {
 		return result
 	}
 
-	name := fmt.Sprintf(
-		"i%04d_v%02d_%s.md",
-		parsed.Index,
-		parsed.Version,
-		parsed.Slug,
-	)
+	name, err := naming.Manuscript(naming.NamingParameters{
+		Project: p,
+		Index:   parsed.Index,
+		Version: parsed.Version,
+		Title:   parsed.Slug,
+	})
+	if err != nil {
+		result.Issue = err
+		return result
+	}
 
 	normalizedPath := filepath.Join(filepath.Dir(validatedPath), name)
 

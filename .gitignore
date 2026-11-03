@@ -1,0 +1,36 @@
+
+# Build
+/bin/
+/dist/
+/build/
+*.exe
+*.test
+*.out
+
+# Coverage
+coverage.txt
+coverage.out
+*.coverprofile
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDEs
+.idea/
+.vscode/
+.zed/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Debugging
+__debug_bin
+debug

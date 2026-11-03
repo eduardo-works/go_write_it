@@ -132,13 +132,24 @@ func addStandaloneManuscriptFile(p *project.Project, contextFolder string) strin
 		"title": p.Title,
 	})
 
+	name, err := naming.Manuscript(naming.NamingParameters{
+		Project: p,
+		Title:   p.Title,
+	})
+	if err != nil {
+		terminal.Warning(fmt.Sprintf(
+			"Failed to generate standalone manuscript name: %v",
+			err,
+		))
+		return ""
+	}
+
 	path, err := cmdproject.WriteFile(
 		p,
 		content,
 		contextFolder,
-		naming.StandaloneManuscript(1, p.Title),
+		name,
 	)
-
 	if err != nil {
 		terminal.Warning(fmt.Sprintf(
 			"Failed to create standalone manuscript: %v",

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/eduardo-works/writeit/pkg/naming"
 	"github.com/eduardo-works/writeit/pkg/parser"
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -41,7 +42,11 @@ func NormalizeParted(p *project.Project, path string) NormalizedPath {
 	if parsed.IsPart {
 		normalizedPath = normalizeIsPart(parsed)
 	} else {
-		normalizedPath = normalizeIsNotPart(parsed)
+		normalizedPath, err = normalizeIsNotPart(p, parsed)
+		if err != nil {
+			result.Issue = err
+			return result
+		}
 	}
 
 	can, err := canNormalize(validatedPath, normalizedPath)
@@ -61,18 +66,21 @@ func NormalizeParted(p *project.Project, path string) NormalizedPath {
 }
 
 func normalizeIsPart(parsed parser.ParsedFiled) string {
-	name := fmt.Sprintf("p%02d_i0000_%s.md", parsed.Part, parsed.Slug)
+	name := naming.PartedPart(parsed.Part)
 	return filepath.Join(filepath.Dir(parsed.Original), name)
 }
 
-func normalizeIsNotPart(parsed parser.ParsedFiled) string {
-	name := fmt.Sprintf(
-		"p%02d_i%04d_v%02d_%s.md",
-		parsed.Part,
-		parsed.Index,
-		parsed.Version,
-		parsed.Slug,
-	)
+func normalizeIsNotPart(p *project.Project, parsed parser.ParsedFiled) (string, error) {
+	name, err := naming.Manuscript(naming.NamingParameters{
+		Project: p,
+		Part:    parsed.Part,
+		Index:   parsed.Index,
+		Version: parsed.Version,
+		Title:   parsed.Slug,
+	})
+	if err != nil {
+		return "", err
+	}
 
-	return filepath.Join(filepath.Dir(parsed.Original), name)
+	return filepath.Join(filepath.Dir(parsed.Original), name), nil
 }

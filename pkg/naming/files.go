@@ -1,27 +1,43 @@
 package naming
 
-import "fmt"
+import (
+	"fmt"
 
-// Pattern: v00_another-slug.md
-func StandaloneManuscript(version int, title string) string {
-	if version <= 0 {
-		version = 1
+	"github.com/eduardo-works/writeit/pkg/project"
+)
+
+func Manuscript(n NamingParameters) (string, error) {
+	if err := n.Validate(); err != nil {
+		return "", err
 	}
 
-	return fmt.Sprintf("v%02d_%s.md", version, Slugify(title))
+	switch {
+	case n.Project.IsStandalone():
+		return StandaloneManuscript(n), nil
+
+	case n.Project.IsChaptered():
+		return ChapteredManuscript(n), nil
+
+	case n.Project.IsParted():
+		return PartedManuscript(n), nil
+	}
+
+	return "", fmt.Errorf("invalid project type: %w", project.ErrInvalidValue)
+}
+
+// Pattern: v00_another-slug.md
+func StandaloneManuscript(n NamingParameters) string {
+	return fmt.Sprintf("v%02d_%s.md", n.Version, Slugify(n.Title))
 }
 
 // Pattern: i0000_v00_another-slug.md
-func ChapteredManuscript(index int, version int, title string) string {
-	if index < 0 {
-		return ""
-	}
-
-	if version <= 0 {
-		version = 1
-	}
-
-	return fmt.Sprintf("i%04d_v%02d_%s.md", index, version, Slugify(title))
+func ChapteredManuscript(n NamingParameters) string {
+	return fmt.Sprintf(
+		"i%04d_v%02d_%s.md",
+		n.Index,
+		n.Version,
+		Slugify(n.Title),
+	)
 }
 
 // Pattern: p00_i0000_another-slug.md
@@ -34,14 +50,12 @@ func PartedPart(part int) string {
 }
 
 // Pattern: p00_i0000_v00_another-slug.md
-func PartedManuscript(part int, index int, version int, title string) string {
-	if part <= 0 || index < 0 {
-		return ""
-	}
-
-	if version <= 0 {
-		version = 1
-	}
-
-	return fmt.Sprintf("p%02d_i%04d_v%02d_%s.md", part, index, version, Slugify(title))
+func PartedManuscript(n NamingParameters) string {
+	return fmt.Sprintf(
+		"p%02d_i%04d_v%02d_%s.md",
+		n.Part,
+		n.Index,
+		n.Version,
+		Slugify(n.Title),
+	)
 }

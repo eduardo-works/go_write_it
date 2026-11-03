@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eduardo-works/writeit/pkg/naming"
 	"github.com/eduardo-works/writeit/pkg/parser"
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/validator"
@@ -63,7 +64,16 @@ func NormalizeStandAlone(p *project.Project, path string) NormalizedPath {
 		return result
 	}
 
-	name := fmt.Sprintf("v%02d_%s.md", parsed.Version, p.Slug)
+	name, err := naming.Manuscript(naming.NamingParameters{
+		Project: p,
+		Version: parsed.Version,
+		Title:   p.Slug,
+	})
+	if err != nil {
+		result.Issue = err
+		return result
+	}
+
 	normalizedPath := filepath.Join(filepath.Dir(validatedPath), name)
 
 	can, err := canNormalize(validatedPath, normalizedPath)
