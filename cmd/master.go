@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/eduardo-works/writeit/cmd/master/assemble"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,7 @@ var masterDryRunCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Root path:", p.RootFolder)
+		assemble.MasterDryRun(p)
 		return nil
 	},
 }
