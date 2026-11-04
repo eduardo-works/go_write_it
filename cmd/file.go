@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/eduardo-works/writeit/cmd/file"
 	"github.com/eduardo-works/writeit/pkg/resolver"
@@ -56,13 +59,12 @@ var fileCreateCmd = &cobra.Command{
 			return err
 		}
 
-		file, err := file.FileCreate(p, contextFolder, title)
+		createdFile, err := file.FileCreate(p, contextFolder, title)
 		if err != nil {
 			return fmt.Errorf("file creation failed: %w", err)
 		}
 
-		terminal.Info(fmt.Sprintf("File created: %s", file))
-
+		terminal.Info(fmt.Sprintf("File created: %s", createdFile))
 		return nil
 	},
 }
@@ -70,10 +72,12 @@ var fileCreateCmd = &cobra.Command{
 var fileVersionCmd = &cobra.Command{
 	Use:     "version <filePath>",
 	Short:   "Create a new version of a project file.",
-	Example: `writeit file version ./my-book/part_01/some-chapter.md --title="Change The Title"`,
+	Example: `writeit file version ./my-book/parte_01/some-chapter.md --title="Change The Title"`,
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		path, err := validator.ValidateManuscript(args[0])
+		path := args[0]
+
+		p, err := resolver.ResolveProject(path)
 		if err != nil {
 			return err
 		}
@@ -83,10 +87,30 @@ var fileVersionCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Manuscript path:", path)
-		if title != "" {
-			fmt.Println("Chapter title:", title)
+		createdFile, sourceFile, err := file.FileVersion(p, path, title)
+		if err != nil {
+			return fmt.Errorf("file version creation failed: %w", err)
 		}
-		return nil
+
+		terminal.Info(fmt.Sprintf("File version created: %s", createdFile))
+
+		output, err := exec.Command("diff", "--", sourceFile, createdFile).CombinedOutput()
+
+		if err == nil {
+			terminal.Info(fmt.Sprintf(
+				"%s is equal to %s",
+				filepath.Base(createdFile),
+				filepath.Base(sourceFile),
+			))
+			return nil
+		}
+
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+			fmt.Print(string(output))
+			return nil
+		}
+
+		return fmt.Errorf("failed to compare file versions: %w: %s", err, output)
 	},
 }

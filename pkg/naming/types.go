@@ -3,6 +3,7 @@ package naming
 import (
 	"fmt"
 
+	"github.com/eduardo-works/writeit/pkg/parser"
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/validator"
 )
@@ -37,6 +38,18 @@ func (n *NamingParameters) Validate() error {
 	}
 
 	return nil
+}
+
+func FromParsed(p *project.Project, pf parser.ParsedFiled) (NamingParameters, error) {
+	params := NamingParameters{
+		Project: p,
+		Part:    pf.Part,
+		Index:   pf.Index,
+		Version: pf.Version,
+		Title:   pf.Slug,
+	}
+
+	return params, params.Validate()
 }
 
 func (n *NamingParameters) validateStandalone() error {
