@@ -1,6 +1,7 @@
 package create
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -10,32 +11,52 @@ import (
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/eduardo-works/writeit/pkg/template"
-	"github.com/eduardo-works/writeit/pkg/terminal"
 )
 
-func ProjectCreate(rootFolder string, o Options) (project.Project, error) {
+func ProjectCreate(rootFolder string, o Options) (p project.Project, err error) {
 	slug := naming.Slugify(o.Title)
 
 	projectFolder, err := cmdproject.MakeDir(nil, rootFolder, slug)
 	if err != nil {
-		return project.Project{}, err
+		return project.Project{}, fmt.Errorf("failed to create project folder: %w", err)
 	}
 
-	p, err := createProjectFile(projectFolder, slug, o)
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		if removeErr := os.RemoveAll(projectFolder); removeErr != nil {
+			err = errors.Join(
+				err,
+				fmt.Errorf("failed to clean up project folder: %w", removeErr),
+			)
+		}
+
+		p = project.Project{}
+	}()
+
+	p, err = createProjectFile(projectFolder, slug, o)
 	if err != nil {
-		return project.Project{}, err
+		return p, err
 	}
 
 	for _, folder := range []string{project.MetaMeta, project.MetaPrompts} {
-		createMetaFolder(&p, folder)
+		if err = createMetaFolder(&p, folder); err != nil {
+			return p, err
+		}
 	}
 
-	createContextChapteredFolder(&p)
-	createContextStandaloneFolder(&p)
-	err = cmdproject.CreateAllContextPartFolders(&p)
-	if err != nil {
-		terminal.Warning(err.Error())
+	if err = createContextChapteredFolder(&p); err != nil {
 		return p, err
+	}
+
+	if err = createContextStandaloneFolder(&p); err != nil {
+		return p, err
+	}
+
+	if err = cmdproject.CreateAllContextPartFolders(&p); err != nil {
+		return p, fmt.Errorf("failed to create part folders: %w", err)
 	}
 
 	return p, nil
@@ -61,73 +82,64 @@ func createProjectFile(rootFolder string, slug string, o Options) (project.Proje
 	}
 
 	if err := p.Save(); err != nil {
-		if removeErr := os.RemoveAll(rootFolder); removeErr != nil {
-			return project.Project{}, fmt.Errorf(
-				"failed to save project: %w; failed to clean up folder: %v",
-				err,
-				removeErr,
-			)
-		}
-
-		return project.Project{}, err
+		return project.Project{}, fmt.Errorf("failed to save project: %w", err)
 	}
 
 	return p, nil
 }
 
-func createContextChapteredFolder(p *project.Project) {
+func createContextChapteredFolder(p *project.Project) error {
 	if !p.IsChaptered() {
-		return
+		return nil
 	}
 
 	contextFolder, err := resolver.ResolveContext(*p)
 	if err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to resolve the context folder: %v", err))
-		return
+		return fmt.Errorf("failed to resolve chaptered context: %w", err)
 	}
 
 	if _, err := cmdproject.MakeDir(p, contextFolder); err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to create the context folder: %v", err))
-		return
+		return fmt.Errorf("failed to create chaptered context folder: %w", err)
 	}
 
 	cmdproject.AddGitKeep(contextFolder)
+
+	return nil
 }
 
-func createContextStandaloneFolder(p *project.Project) {
+func createContextStandaloneFolder(p *project.Project) error {
 	if !p.IsStandalone() {
-		return
+		return nil
 	}
 
 	contextFolder, err := resolver.ResolveContext(*p)
 	if err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to resolve the context folder: %v", err))
-		return
+		return fmt.Errorf("failed to resolve standalone context: %w", err)
 	}
 
 	if _, err := cmdproject.MakeDir(p, contextFolder); err != nil {
-		terminal.Warning(fmt.Sprintf("Failed to create the context folder: %v", err))
-		return
+		return fmt.Errorf("failed to create standalone context folder: %w", err)
 	}
 
-	addStandaloneManuscriptFile(p, contextFolder)
+	if _, err := addStandaloneManuscriptFile(p, contextFolder); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func createMetaFolder(p *project.Project, folderName string) {
+func createMetaFolder(p *project.Project, folderName string) error {
 	folder, err := cmdproject.MakeDir(p, p.RootFolder, folderName)
 	if err != nil {
-		terminal.Warning(fmt.Sprintf(
-			"Failed to create the folder %s: %v",
-			folderName,
-			err,
-		))
-		return
+		return fmt.Errorf("failed to create folder %s: %w", folderName, err)
 	}
 
 	cmdproject.AddGitKeep(folder)
+
+	return nil
 }
 
-func addStandaloneManuscriptFile(p *project.Project, contextFolder string) string {
+func addStandaloneManuscriptFile(p *project.Project, contextFolder string) (string, error) {
 	content := template.Content(template.StandaloneTemplate, map[string]string{
 		"title": p.Title,
 	})
@@ -137,11 +149,7 @@ func addStandaloneManuscriptFile(p *project.Project, contextFolder string) strin
 		Title:   p.Title,
 	})
 	if err != nil {
-		terminal.Warning(fmt.Sprintf(
-			"Failed to generate standalone manuscript name: %v",
-			err,
-		))
-		return ""
+		return "", fmt.Errorf("failed to generate standalone manuscript name: %w", err)
 	}
 
 	path, err := cmdproject.WriteFile(
@@ -151,12 +159,8 @@ func addStandaloneManuscriptFile(p *project.Project, contextFolder string) strin
 		name,
 	)
 	if err != nil {
-		terminal.Warning(fmt.Sprintf(
-			"Failed to create standalone manuscript: %v",
-			err,
-		))
-		return ""
+		return "", fmt.Errorf("failed to create standalone manuscript: %w", err)
 	}
 
-	return path
+	return path, nil
 }

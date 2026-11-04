@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/eduardo-works/writeit/cmd/file"
 	"github.com/eduardo-works/writeit/pkg/resolver"
+	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/eduardo-works/writeit/pkg/validator"
 	"github.com/spf13/cobra"
 )
@@ -29,15 +31,22 @@ func init() {
 var fileCreateCmd = &cobra.Command{
 	Use:     "create <contextFolder> <title>",
 	Short:   "Create a new project file.",
-	Example: `writeit file create ./my-book/part_01 "This Is a Nice Chapter"`,
+	Example: `writeit file create ./my-book/parte_01 "This Is a Nice Chapter"`,
 	Args:    cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		p, err := resolver.ResolveProject(args[0])
+		path := args[0]
+
+		p, err := resolver.ResolveProject(path)
 		if err != nil {
 			return err
 		}
 
-		contextFolder, err := resolver.ResolveContext(p)
+		contextFolder, err := resolver.ResolveContainer(path)
+		if err != nil {
+			return err
+		}
+
+		contextFolder, err = validator.ValidateContext(p, contextFolder)
 		if err != nil {
 			return err
 		}
@@ -47,8 +56,13 @@ var fileCreateCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Context path:", contextFolder)
-		fmt.Println("Chapter title:", title)
+		file, err := file.FileCreate(p, contextFolder, title)
+		if err != nil {
+			return fmt.Errorf("file creation failed: %w", err)
+		}
+
+		terminal.Info(fmt.Sprintf("File created: %s", file))
+
 		return nil
 	},
 }

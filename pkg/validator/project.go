@@ -149,12 +149,12 @@ func ValidateContext(p project.Project, path string) (string, error) {
 		return "", err
 	}
 
-	candidate := resolved
-	if info.Mode().IsRegular() {
-		candidate = filepath.Dir(resolved)
+	folder := resolved
+	if !info.IsDir() {
+		folder = filepath.Dir(resolved)
 	}
 
-	candidate, err = p.Contain(candidate)
+	folder, err = p.Contain(folder)
 	if err != nil {
 		return "", err
 	}
@@ -164,18 +164,28 @@ func ValidateContext(p project.Project, path string) (string, error) {
 		return "", err
 	}
 
-	rel, err := filepath.Rel(contextFolder, candidate)
+	if folder == p.RootFolder {
+		return "", fmt.Errorf("invalid context: %s", path)
+	}
+
+	if p.IsParted() {
+		part, err := resolver.ResolvePart(p, folder)
+		if err != nil {
+			return "", fmt.Errorf("invalid context: %s: %w", path, err)
+		}
+
+		contextFolder = fmt.Sprintf("%s%02d", contextFolder, part)
+	}
+
+	rel, err := filepath.Rel(contextFolder, folder)
 	if err != nil {
 		return "", err
 	}
 
-	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", fmt.Errorf("the context is invalid: %s", path)
+	if rel == ".." || filepath.IsAbs(rel) ||
+		strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid context: %s", path)
 	}
 
-	if info.Mode().IsRegular() {
-		return filepath.Join(candidate, filepath.Base(resolved)), nil
-	}
-
-	return candidate, nil
+	return resolved, nil
 }

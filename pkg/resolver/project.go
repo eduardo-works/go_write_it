@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 
 	"github.com/eduardo-works/writeit/pkg/project"
@@ -91,4 +92,33 @@ func ResolveContext(p project.Project, parts ...string) (string, error) {
 	partName := fmt.Sprintf("%s%02d", project.ContextParted, part)
 
 	return filepath.Join(p.RootFolder, partName), nil
+}
+
+func ResolvePart(p project.Project, path string) (int, error) {
+	if !p.IsParted() {
+		return -1, nil
+	}
+
+	folder, err := ResolveContainer(path)
+	if err != nil {
+		return -1, err
+	}
+
+	re := regexp.MustCompile(`^parte_([0-9]+)$`)
+	matches := re.FindStringSubmatch(filepath.Base(folder))
+
+	if matches == nil {
+		return -1, fmt.Errorf("cannot resolve part from path: %w", project.ErrInvalidValue)
+	}
+
+	part, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return -1, err
+	}
+
+	if part < 1 || part > p.Parts {
+		return -1, fmt.Errorf("part %d is outside project range: %w", part, project.ErrInvalidValue)
+	}
+
+	return part, nil
 }
