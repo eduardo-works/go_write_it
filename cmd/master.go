@@ -35,7 +35,12 @@ var masterAssembleCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Root path:", p.RootFolder)
+		file, err := assemble.MasterAssemble(p)
+		if err != nil {
+			return fmt.Errorf("Failed to assemble: %w", err)
+		}
+
+		fmt.Println("Assembled to:", file)
 		return nil
 	},
 }
@@ -48,7 +53,7 @@ var masterDryRunCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p, err := resolver.ResolveProject(args[0])
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to assemble: %w", err)
 		}
 
 		assemble.MasterDryRun(p)

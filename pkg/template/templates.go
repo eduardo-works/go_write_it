@@ -5,9 +5,11 @@ import (
 	"unicode"
 )
 
+const NewLine = "\n\n"
+
 const StandaloneTemplate = "# «title»"
 
-const PartedTemplate = `# «title»"
+const PartedTemplate = `# «title»
 
 ::: {custom-style="PART_NAME"}
 Mrs. Dalloway
@@ -23,11 +25,18 @@ Virginia Woolf, *Mrs. Dalloway*
 :::
 `
 
+const MasterTemplate = `# «title»
+
+::: {custom-style="Author_Info"}
+«author_info»
+:::
+`
+
 func Content(template string, options map[string]string) string {
 	content := template
 	for option, value := range options {
 		content = strings.ReplaceAll(content, "«"+option+"»", value)
 	}
 
-	return strings.TrimFunc(content, unicode.IsSpace) + "\n\n"
+	return strings.TrimFunc(content, unicode.IsSpace) + NewLine
 }
