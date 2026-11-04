@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/eduardo-works/writeit/cmd/master/assemble"
+	"github.com/eduardo-works/writeit/cmd/master/compile"
 	"github.com/eduardo-works/writeit/pkg/resolver"
 	"github.com/spf13/cobra"
 )
@@ -72,7 +73,12 @@ var masterCompileCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Root path:", p.RootFolder)
+		file, err := compile.MasterCompile(p)
+		if err != nil {
+			return fmt.Errorf("Failed to compile: %w", err)
+		}
+
+		fmt.Println("Compiled to:", file)
 		return nil
 	},
 }

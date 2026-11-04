@@ -3,10 +3,10 @@ package assemble
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/eduardo-works/writeit/cmd/master"
 	"github.com/eduardo-works/writeit/pkg/project"
 	"github.com/eduardo-works/writeit/pkg/template"
 	"github.com/eduardo-works/writeit/pkg/terminal"
@@ -18,7 +18,7 @@ func MasterAssemble(p project.Project) (string, error) {
 		return "", nil
 	}
 
-	file := filepath.Join(p.RootFolder, "master.md")
+	file := master.MasterFile(p)
 
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		terminal.Error(err.Error())
