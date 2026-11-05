@@ -31,6 +31,7 @@ func main() {
 	configureProject()
 	configureFiles()
 	configureMaster()
+	configureImage()
 	if err := rootCmd.Execute(); err != nil {
 		if debug {
 			terminal.Error(fmt.Sprintf("%+v", err))
