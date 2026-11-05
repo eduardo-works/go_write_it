@@ -57,11 +57,14 @@ var masterDryRunCmd = &cobra.Command{
 			return fmt.Errorf("Failed to assemble: %w", err)
 		}
 
-		assemble.MasterDryRun(p)
+		err = assemble.MasterDryRun(p)
+		if err != nil {
+			return fmt.Errorf("Failed to list: %w", err)
+		}
+
 		return nil
 	},
 }
-
 var masterCompileCmd = &cobra.Command{
 	Use:     "compile <rootFolder>",
 	Short:   "Compile the assembled Markdown into a LibreOffice document.",
@@ -94,7 +97,12 @@ var masterBuildCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Root path:", p.RootFolder)
+		file, err := compile.MasterBuild(p)
+		if err != nil {
+			return fmt.Errorf("Failed to compile: %w", err)
+		}
+
+		fmt.Println("Compiled to:", file)
 		return nil
 	},
 }

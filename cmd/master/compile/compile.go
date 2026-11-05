@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/eduardo-works/writeit/cmd/master"
+	"github.com/eduardo-works/writeit/cmd/master/assemble"
 	"github.com/eduardo-works/writeit/pkg/project"
 )
 
@@ -24,6 +25,15 @@ func MasterCompile(p project.Project) (string, error) {
 	}
 
 	return compiledFile, nil
+}
+
+func MasterBuild(p project.Project) (string, error) {
+	_, err := assemble.MasterAssemble(p)
+	if err != nil {
+		return "", err
+	}
+
+	return MasterCompile(p)
 }
 
 func pandoc(source, destination string) (*exec.Cmd, error) {
