@@ -25,6 +25,8 @@ func generateMasterContent(p project.Project, files []string) string {
 			continue
 		}
 
+		page = template.ReplaceAll(page)
+
 		content = strings.TrimSpace(content)
 
 		if content != "" {
