@@ -6,6 +6,7 @@ import (
 	"github.com/eduardo-works/writeit/cmd/master/assemble"
 	"github.com/eduardo-works/writeit/cmd/master/compile"
 	"github.com/eduardo-works/writeit/pkg/resolver"
+	"github.com/eduardo-works/writeit/pkg/terminal"
 	"github.com/spf13/cobra"
 )
 
@@ -97,12 +98,13 @@ var masterBuildCmd = &cobra.Command{
 			return err
 		}
 
-		file, err := compile.MasterBuild(p)
+		master, compiled, err := compile.MasterBuild(p)
 		if err != nil {
 			return fmt.Errorf("Failed to compile: %w", err)
 		}
 
-		fmt.Println("Compiled to:", file)
+		terminal.Info(fmt.Sprintf("Assembled to: %s", master))
+		terminal.Info(fmt.Sprintf("Compiled to: %s", compiled))
 		return nil
 	},
 }

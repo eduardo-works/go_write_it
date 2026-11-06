@@ -20,6 +20,10 @@ func MasterAssemble(p project.Project) (string, error) {
 
 	file := master.MasterFile(p)
 
+	if err := os.Remove(file); err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+
 	if err := os.WriteFile(file, []byte(content), 0644); err != nil {
 		terminal.Error(err.Error())
 		return "", err
@@ -67,5 +71,5 @@ func assemble(p project.Project) string {
 		"content":     content,
 	})
 
-	return strings.TrimSpace(master) + template.NewLine + content
+	return strings.TrimSpace(master) + template.NewLine
 }

@@ -11,25 +11,27 @@ const StandaloneTemplate = "# «title»"
 
 const PartedTemplate = `# «title»
 
-::: {custom-style="PART_NAME"}
+::: {custom-style="WT_PART_NAME"}
 Mrs. Dalloway
 :::
 
-::: {custom-style="PART_EPIGRAPH"}
+::: {custom-style="WT_PART_EPIGRAPH"}
 She felt very young; at the same time unspeakably aged.
 She sliced like a knife through everything; at the same time was outside, looking on.
 :::
 
-::: {custom-style="PART_EPIGRAPH_AUTHOR"}
+::: {custom-style="WT_PART_EPIGRAPH_AUTHOR"}
 Virginia Woolf, *Mrs. Dalloway*
 :::
 `
 
 const MasterTemplate = `# «title»
 
-::: {custom-style="Author_Info"}
+::: {custom-style="WT_AUTHOR_INFO"}
 «author_info»
 :::
+
+«content»
 `
 
 func Content(template string, options map[string]string) string {
