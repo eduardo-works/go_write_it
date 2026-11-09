@@ -32,6 +32,7 @@ func main() {
 	configureFiles()
 	configureMaster()
 	configureConvert()
+	configureStyles()
 
 	if err := rootCmd.Execute(); err != nil {
 		if debug {
