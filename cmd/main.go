@@ -33,6 +33,7 @@ func main() {
 	configureMaster()
 	configureConvert()
 	configureStyles()
+	rootCmd.AddCommand(toOdtCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		if debug {
